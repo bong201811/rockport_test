@@ -1,0 +1,365 @@
+<!doctype html>
+<html lang="ko">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+  <meta name="theme-color" content="#1f6feb">
+  <meta name="apple-mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-status-bar-style" content="default">
+  <meta name="apple-mobile-web-app-title" content="RBO 재고조사">
+  <title>RBO 재고조사</title>
+  <link rel="manifest" href="./manifest.webmanifest">
+  <link rel="icon" href="./favicon.png">
+  <style>
+    :root {
+      --bg: #f5f7fb;
+      --card: #ffffff;
+      --line: #dce2ea;
+      --text: #20242a;
+      --muted: #68707a;
+      --primary: #1f6feb;
+      --primary-soft: #eef5ff;
+      --danger: #c62828;
+      --warn: #d97706;
+      --ok: #1b7f3a;
+      --plus: #d32f2f;
+      --minus: #1565c0;
+      --shadow: 0 8px 28px rgba(23, 35, 55, .08);
+    }
+
+    * { box-sizing: border-box; }
+    html, body { margin: 0; padding: 0; }
+    body {
+      min-height: 100vh;
+      background: var(--bg);
+      color: var(--text);
+      font-family: system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+      font-size: 14px;
+      -webkit-tap-highlight-color: transparent;
+    }
+
+    .app {
+      width: min(760px, 100%);
+      margin: 0 auto;
+      padding: max(14px, env(safe-area-inset-top)) 14px max(24px, env(safe-area-inset-bottom));
+    }
+
+    .hero {
+      display: grid;
+      grid-template-columns: 1fr 108px;
+      gap: 14px;
+      align-items: center;
+      margin-bottom: 12px;
+      padding: 16px;
+      border-radius: 18px;
+      background: linear-gradient(135deg, #ffffff, #f0f6ff);
+      box-shadow: var(--shadow);
+      border: 1px solid #e7ecf2;
+    }
+
+    .hero h1 { margin: 0 0 5px; font-size: 22px; }
+    .hero p { margin: 0; color: var(--muted); line-height: 1.45; }
+    .hero img { width: 108px; height: 108px; object-fit: cover; border-radius: 16px; }
+
+    .card {
+      background: var(--card);
+      border: 1px solid var(--line);
+      border-radius: 16px;
+      padding: 14px;
+      margin-bottom: 12px;
+      box-shadow: 0 4px 16px rgba(23, 35, 55, .045);
+    }
+
+    .card h2 {
+      margin: 0 0 10px;
+      font-size: 15px;
+      display: flex;
+      align-items: center;
+      gap: 6px;
+    }
+
+    .label { display: block; font-weight: 700; margin: 8px 0 5px; }
+    .help { color: var(--muted); font-size: 12px; line-height: 1.45; }
+
+    input[type="file"], input[type="text"] {
+      width: 100%;
+      min-height: 44px;
+      border: 1px solid #cfd6df;
+      border-radius: 10px;
+      background: #fff;
+      padding: 9px 10px;
+      font: inherit;
+    }
+
+    input[type="text"]:focus, input[type="file"]:focus {
+      outline: 3px solid rgba(31,111,235,.14);
+      border-color: var(--primary);
+    }
+
+    .scan-row {
+      display: grid;
+      grid-template-columns: 1fr auto auto;
+      gap: 7px;
+      align-items: center;
+    }
+
+    #barcodeInput {
+      font-size: 18px;
+      font-variant-numeric: tabular-nums;
+      letter-spacing: .2px;
+    }
+
+    button, .button-like {
+      min-height: 42px;
+      padding: 8px 12px;
+      border: 1px solid #cfd6df;
+      border-radius: 10px;
+      background: #f8fafc;
+      color: var(--text);
+      font: inherit;
+      font-weight: 650;
+      cursor: pointer;
+      touch-action: manipulation;
+    }
+
+    button:hover, .button-like:hover { background: #eef2f7; }
+    button.primary { background: var(--primary); border-color: var(--primary); color: #fff; }
+    button.warn { background: #fff8e6; border-color: #f2c14e; }
+    button.danger { background: #fff1f1; border-color: #ef9a9a; color: var(--danger); }
+    button.ghost { background: #fff; }
+    button:disabled { opacity: .5; cursor: not-allowed; }
+
+    .file-actions, .export-actions, .save-actions, .filters {
+      display: flex;
+      gap: 7px;
+      flex-wrap: wrap;
+      align-items: center;
+    }
+
+    .file-actions { margin-top: 7px; }
+    .file-actions input { display: none; }
+
+    .summary-grid {
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      gap: 8px;
+      margin-bottom: 10px;
+    }
+
+    .summary-box {
+      background: #f8fafc;
+      border: 1px solid #e5e9ef;
+      border-radius: 12px;
+      padding: 10px;
+      text-align: center;
+    }
+    .summary-box .k { display: block; color: var(--muted); font-size: 11px; margin-bottom: 3px; }
+    .summary-box .v { font-size: 19px; font-weight: 800; font-variant-numeric: tabular-nums; }
+
+    .filter-btn { min-height: 36px; padding: 6px 10px; font-size: 12px; }
+    .filter-btn.active { background: var(--primary); border-color: var(--primary); color: #fff; }
+
+    #resultArea {
+      max-height: 43vh;
+      overflow: auto;
+      border: 1px solid var(--line);
+      border-radius: 12px;
+      margin-top: 8px;
+      background: #fff;
+    }
+
+    .result-row {
+      display: grid;
+      grid-template-columns: minmax(0, 1fr) auto;
+      gap: 10px;
+      padding: 9px 10px;
+      border-bottom: 1px dashed #e7eaf0;
+      align-items: center;
+    }
+    .result-row:last-child { border-bottom: 0; }
+    .result-row .code { min-width: 0; font-weight: 700; overflow-wrap: anywhere; }
+    .result-row .nums { white-space: nowrap; font-variant-numeric: tabular-nums; font-size: 12px; }
+    .diff-plus { color: var(--plus); font-weight: 800; }
+    .diff-minus { color: var(--minus); font-weight: 800; }
+    .diff-zero { color: var(--ok); font-weight: 800; }
+    .unknown { background: #fff9ee; color: var(--warn); }
+
+    .msg { min-height: 18px; margin-top: 6px; font-size: 12px; line-height: 1.45; }
+    .ok { color: var(--ok); }
+    .warn-text { color: var(--warn); }
+    .cancel-msg { color: var(--warn); font-weight: 800; }
+
+    .save-row {
+      display: grid;
+      grid-template-columns: minmax(160px, 1fr) auto;
+      gap: 7px;
+      align-items: center;
+    }
+
+    #saveList { margin-top: 8px; display: flex; gap: 6px; flex-wrap: wrap; }
+    .session-item {
+      display: inline-flex;
+      align-items: center;
+      gap: 2px;
+      border: 1px solid #d8e2ef;
+      background: #f7fbff;
+      border-radius: 999px;
+      padding: 2px 4px 2px 8px;
+      font-size: 12px;
+    }
+    .session-load { cursor: pointer; color: #165bb7; }
+    .session-delete { cursor: pointer; color: var(--danger); border: 0; background: transparent; min-height: 28px; padding: 0 6px; }
+
+    .status-line {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 6px;
+      align-items: center;
+      margin-top: 8px;
+    }
+    .chip {
+      display: inline-flex;
+      align-items: center;
+      min-height: 28px;
+      padding: 4px 8px;
+      border-radius: 999px;
+      background: #f2f4f7;
+      color: #4b5563;
+      font-size: 11px;
+    }
+    .chip.good { background: #eef9f1; color: var(--ok); }
+
+    .camera-layer {
+      position: fixed;
+      inset: 0;
+      z-index: 9999;
+      background: rgba(0,0,0,.9);
+      display: none;
+      flex-direction: column;
+      padding: max(14px, env(safe-area-inset-top)) 14px max(16px, env(safe-area-inset-bottom));
+    }
+    .camera-layer.open { display: flex; }
+    .camera-top { display: flex; justify-content: space-between; gap: 10px; color: #fff; align-items: center; margin-bottom: 10px; }
+    .camera-stage { position: relative; flex: 1; min-height: 0; border-radius: 16px; overflow: hidden; background: #111; }
+    #cameraVideo { width: 100%; height: 100%; object-fit: cover; }
+    .scan-guide {
+      position: absolute;
+      left: 8%; right: 8%; top: 38%; height: 24%;
+      border: 3px solid rgba(255,255,255,.88);
+      border-radius: 14px;
+      box-shadow: 0 0 0 9999px rgba(0,0,0,.2);
+      pointer-events: none;
+    }
+    #cameraMsg { color: #fff; text-align: center; min-height: 22px; margin-top: 10px; font-size: 13px; }
+
+    @media (max-width: 580px) {
+      .app { padding-left: 10px; padding-right: 10px; }
+      .hero { grid-template-columns: 1fr 82px; padding: 13px; }
+      .hero h1 { font-size: 19px; }
+      .hero img { width: 82px; height: 82px; }
+      .card { padding: 12px; border-radius: 14px; }
+      .scan-row { grid-template-columns: 1fr auto; }
+      #cameraBtn { grid-column: 1 / -1; width: 100%; }
+      .result-row { grid-template-columns: 1fr; gap: 3px; }
+      .result-row .nums { white-space: normal; }
+      .save-row { grid-template-columns: 1fr; }
+      .save-actions button, .export-actions button { flex: 1 1 140px; }
+    }
+  </style>
+</head>
+<body>
+  <main class="app">
+    <section class="hero">
+      <div>
+        <h1>📦 RBO 재고조사</h1>
+        <p>PC · 모바일 공용 웹버전<br>엑셀은 서버로 전송하지 않고 이 기기 안에서만 처리합니다.</p>
+      </div>
+      <img src="./rock.png" alt="RBO">
+    </section>
+
+    <section class="card">
+      <h2>1. 파일 업로드</h2>
+      <label class="label" for="file1">기준정보 (바코드 / 스타일코드 / 사이즈코드)</label>
+      <input type="file" id="file1" accept=".csv,.xlsx,.xls" multiple>
+      <div class="file-actions">
+        <input type="file" id="file1Extra" accept=".csv,.xlsx,.xls" multiple>
+        <button id="addFileBtn" class="ghost">➕ 기준정보 추가 업로드</button>
+      </div>
+
+      <label class="label" for="file2">현재고 (스타일코드 / 사이즈코드 / 현재고)</label>
+      <input type="file" id="file2" accept=".csv,.xlsx,.xls">
+      <div id="uploadStatus" class="msg"></div>
+      <div class="status-line">
+        <span id="masterChip" class="chip">기준정보 0개</span>
+        <span id="stockChip" class="chip">현재고 0개</span>
+      </div>
+    </section>
+
+    <section class="card">
+      <h2>2. 바코드 스캔</h2>
+      <div class="scan-row">
+        <input type="text" id="barcodeInput" inputmode="numeric" autocomplete="off" autocapitalize="off" spellcheck="false" placeholder="바코드 찍고 Enter">
+        <button id="undoBtn" class="warn">↩️ 되돌리기</button>
+        <button id="cameraBtn" class="primary">📷 카메라 스캔</button>
+      </div>
+      <div class="help" style="margin-top:7px;">블루투스/USB 스캐너가 키보드처럼 바코드 + Enter를 보내면 PC와 모바일에서 그대로 사용할 수 있습니다.</div>
+      <div id="lastScan" class="msg"></div>
+    </section>
+
+    <section class="card">
+      <h2>3. 결과</h2>
+      <div class="summary-grid">
+        <div class="summary-box"><span class="k">총 실사</span><span id="sumScanned" class="v">0</span></div>
+        <div class="summary-box"><span class="k">현재고 합계</span><span id="sumStock" class="v">0</span></div>
+        <div class="summary-box"><span class="k">차이</span><span id="sumDiff" class="v">0</span></div>
+      </div>
+      <div class="filters">
+        <button class="filter-btn active" data-filter="all">전체</button>
+        <button class="filter-btn" data-filter="scanned">실사목록</button>
+        <button class="filter-btn" data-filter="diff">차이만</button>
+      </div>
+      <div id="resultArea"><div style="padding:14px;color:#8a929c;">데이터를 업로드하고 바코드를 찍어주세요.</div></div>
+    </section>
+
+    <section class="card">
+      <h2>4. 중간 저장</h2>
+      <div class="save-row">
+        <input type="text" id="saveName" placeholder="저장 이름 (예: 1층 창고)">
+        <div class="save-actions">
+          <button id="saveBtn">💾 저장</button>
+          <button id="loadBtn">📂 불러오기</button>
+          <button id="mergeBtn">🔗 합치기</button>
+        </div>
+      </div>
+      <div id="saveList"></div>
+      <div id="saveMsg" class="msg"></div>
+    </section>
+
+    <section class="card">
+      <h2>5. 최종 저장</h2>
+      <div class="export-actions">
+        <button id="exportFull" class="primary">📊 전체 엑셀 저장</button>
+        <button id="exportDiff" class="warn">⚠️ 차이내역만 저장</button>
+        <button id="installBtn" style="display:none;">📲 홈 화면에 설치</button>
+        <button id="resetBtn" class="danger">🔄 실사 초기화</button>
+      </div>
+      <div class="help" style="margin-top:8px;">웹페이지를 새로 열면 기준정보/현재고 파일은 다시 선택해야 합니다. 중간 저장한 실사 수량은 이 브라우저에 남습니다.</div>
+    </section>
+  </main>
+
+  <div id="cameraLayer" class="camera-layer" aria-hidden="true">
+    <div class="camera-top">
+      <strong>📷 카메라 연속 스캔</strong>
+      <button id="cameraCloseBtn">닫기</button>
+    </div>
+    <div class="camera-stage">
+      <video id="cameraVideo" playsinline muted></video>
+      <div class="scan-guide"></div>
+    </div>
+    <div id="cameraMsg">바코드를 사각형 안에 맞춰주세요.</div>
+  </div>
+
+  <script src="./xlsx.full.min.js"></script>
+  <script src="./app.js"></script>
+</body>
+</html>
