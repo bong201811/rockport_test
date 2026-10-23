@@ -1,5 +1,5 @@
-// 간이실사 기능 설치 후 모바일 PWA 캐시 강제 갱신
-const CACHE_NAME = 'rbo-inventory-v2-partial';
+// 간이실사 스타일 전체 사이즈 비교 사이즈별 부족 내역 v1.3 - 모바일 PWA 캐시 갱신
+const CACHE_NAME = 'rbo-inventory-v4-style-size-details';
 const ASSETS = [
   './',
   './index.html',
@@ -19,7 +19,7 @@ self.addEventListener('install', event => {
 });
 self.addEventListener('activate', event => {
   event.waitUntil(
-    caches.keys().then(keys => Promise.all(keys.filter(key => key !== CACHE_NAME).map(key => caches.delete(key))))
+    caches.keys().then(keys => Promise.all(keys.filter(key => key.startsWith('rbo-inventory-') && key !== CACHE_NAME).map(key => caches.delete(key))))
   );
   self.clients.claim();
 });
