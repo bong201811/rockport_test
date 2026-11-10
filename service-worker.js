@@ -1,4 +1,4 @@
-// 간이실사 스타일 전체 사이즈 비교 사이즈별 부족 내역 v1.3 - 모바일 PWA 캐시 갱신
+// 간이실사 스타일 전체 사이즈 비교 사이즈별 부족 내역 v1.4 - 모바일 PWA 캐시 갱신
 const CACHE_NAME = 'rbo-inventory-v4-style-size-details';
 const ASSETS = [
   './',
@@ -11,6 +11,7 @@ const ASSETS = [
   './manifest.webmanifest',
   './icon-192.png',
   './icon-512.png'
+  './scan-tools.js'
 ];
 
 self.addEventListener('install', event => {
