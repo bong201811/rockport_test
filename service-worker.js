@@ -1,5 +1,5 @@
 // 간이실사 스타일 전체 사이즈 비교 사이즈별 부족 내역 v1.4 - 모바일 PWA 캐시 갱신
-const CACHE_NAME = 'rbo-inventory-v1.4.1-style-size-details';
+const CACHE_NAME = 'rbo-inventory-v1.4.2-style-size-details';
 const ASSETS = [
   './',
   './index.html',
@@ -10,7 +10,7 @@ const ASSETS = [
   './favicon.png',
   './manifest.webmanifest',
   './icon-192.png',
-  './icon-512.png'
+  './icon-512.png',
   './scan-tools.js'
 ];
 
